@@ -1,6 +1,10 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { OrbitControls } from "https://cdn.skypack.dev/three@0.136/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
+import { Water } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Water.js';
+import { Sky } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Sky.js';
+
+
 // Set up the scene
 let scene;
 let camera;
@@ -13,7 +17,7 @@ let coinMaterial; //gold color;
 let coinMesh;
 let spaceshipModel;
 const ambient = new THREE.AmbientLight(0xffffff);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 const gltfLoader = new GLTFLoader();
 
 // Add the coin to the scene
@@ -37,7 +41,7 @@ function createScene() {
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
-  scene.add(coinMesh);
+  //scene.add(coinMesh);
   const axesHelper = new THREE.AxesHelper(1000);
   scene.add(axesHelper);
 
@@ -45,7 +49,10 @@ function createScene() {
 
   plane.position.set(0, -2, 0);
   scene.add(plane);
+  
+  camera.position.set(0, 1, 0);
 
+  camera.rotation.x -= Math.PI/6;
   // Set up the camera
   camera.position.z = 3;
 }
@@ -75,8 +82,8 @@ function loadSpaceShip() {
     spaceshipModel = gltf.scene;
     const scale = 0.003;
     spaceshipModel.scale.set(scale, scale, scale);
-    spaceshipModel.position.set(0, 6, 0);
-    // spaceshipModel.rotation.y = Math.PI / 2;
+    spaceshipModel.position.set(0, 6, 2);
+    spaceshipModel.rotation.x = -Math.PI / 2;
     scene.add(spaceshipModel);
     spaceshipModel.add(directionalLight);
   });
@@ -86,6 +93,10 @@ function loadSpaceShip() {
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
+  plane.position.y -= 0.1;
+  if (plane.position.y< - 50){
+    plane.position.y = 0;
+  }
 }
 
 createPlane();
@@ -94,4 +105,19 @@ createScene();
 createCoin();
 addLight();
 generateCoinPosition();
+// create the skybox geometry
+var skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
+
+// create the skybox material
+var skyboxMaterial = new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load('../assets/skybox.jpg'),
+    side: THREE.BackSide
+});
+// create the skybox mesh
+var skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+
+skybox.rotation.y = Math.PI
+
+// add the skybox to the scene
+scene.add(skybox);
 animate();
