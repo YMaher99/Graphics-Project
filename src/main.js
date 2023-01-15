@@ -1,9 +1,8 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { OrbitControls } from "https://cdn.skypack.dev/three@0.136/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
-import { Water } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Water.js';
-import { Sky } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Sky.js';
-
+import { Water } from "https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Water.js";
+import { Sky } from "https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Sky.js";
 
 // Set up the scene
 let scene;
@@ -49,10 +48,10 @@ function createScene() {
 
   plane.position.set(0, -2, -10);
   scene.add(plane);
-  
+
   camera.position.set(0, -4, 0);
 
-  camera.rotation.x -= Math.PI/6;
+  camera.rotation.x -= Math.PI / 6;
   // Set up the camera
   camera.position.z = 3;
 }
@@ -75,10 +74,10 @@ function addLight() {
   scene.add(ambient);
   plane.add(directionalLight);
   directionalLight.position.set(0, -1, 5);
-  const helper = new THREE.DirectionalLightHelper( directionalLight, 1000 );
+  const helper = new THREE.DirectionalLightHelper(directionalLight, 1000);
   // plane.add(directionalLight);
-  helper.update()
-  scene.add(helper)
+  helper.update();
+  scene.add(helper);
 }
 
 function loadSpaceShip() {
@@ -97,53 +96,60 @@ function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   plane.position.y -= 0.1;
-  if (plane.position.y< - 50){
+  if (plane.position.y < -50) {
     plane.position.y = 0;
   }
 }
 
+function createSkyBox() {
+
+  // create the skybox geometry
+  var skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
+
+  // create the skybox material
+  var skyboxMaterial = new THREE.MeshBasicMaterial({
+    map: new THREE.TextureLoader().load("../assets/skybox.jpg"),
+    side: THREE.BackSide,
+  });
+  // create the skybox mesh
+  var skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+
+  skybox.rotation.x = Math.PI / 2;
+
+  // add the skybox to the scene
+  scene.add(skybox);
+}
+
 createPlane();
-loadSpaceShip()
+loadSpaceShip();
 createScene();
 createCoin();
 addLight();
 generateCoinPosition();
-// create the skybox geometry
-var skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
+createSkyBox();
 
-// create the skybox material
-var skyboxMaterial = new THREE.MeshBasicMaterial({
-    map: new THREE.TextureLoader().load('../assets/skybox.jpg'),
-    side: THREE.BackSide
-});
-// create the skybox mesh
-var skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 
-skybox.rotation.x = Math.PI/2
-
-// add the skybox to the scene
-scene.add(skybox);
-
-window.addEventListener('keydown', (event)=>{
+window.addEventListener("keydown", (event) => {
   const speed = 5;
-  const limit = speed * 3
-  switch(event.key){
+  const limit = speed * 3;
+  switch (event.key) {
     case "D":
     case "d":
       spaceshipModel.position.x += speed;
-      break
+      break;
     case "a":
     case "A":
       spaceshipModel.position.x -= speed;
-      break
+      break;
     default:
-      break
+      break;
   }
-  if(spaceshipModel.position.x > limit){
-    spaceshipModel.position.x = limit
-  }else if(spaceshipModel.position.x < -limit){
-    spaceshipModel.position.x = -limit
+  if (spaceshipModel.position.x > limit) {
+    spaceshipModel.position.x = limit;
+  } else if (spaceshipModel.position.x < -limit) {
+    spaceshipModel.position.x = -limit;
   }
   camera.position.x = spaceshipModel.position.x;
-})
+});
+
 animate();
