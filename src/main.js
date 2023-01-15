@@ -17,13 +17,13 @@ let coinMaterial; //gold color;
 let coinMesh;
 let spaceshipModel;
 const ambient = new THREE.AmbientLight(0xffffff);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 const gltfLoader = new GLTFLoader();
 
 // Add the coin to the scene
 
 function createPlane() {
-  geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
+  geometry = new THREE.PlaneGeometry(50, 1000, 100, 100);
   material = new THREE.MeshPhongMaterial({
     color: 0xff8875,
     side: THREE.DoubleSide,
@@ -47,10 +47,10 @@ function createScene() {
 
   camera.rotation.x = Math.PI / 2;
 
-  plane.position.set(0, -2, 0);
+  plane.position.set(0, -2, -10);
   scene.add(plane);
   
-  camera.position.set(0, 1, 0);
+  camera.position.set(0, -4, 0);
 
   camera.rotation.x -= Math.PI/6;
   // Set up the camera
@@ -74,18 +74,21 @@ function generateCoinPosition() {
 function addLight() {
   scene.add(ambient);
   plane.add(directionalLight);
-  directionalLight.position.set(0, 10, 0);
+  directionalLight.position.set(0, -1, 5);
+  const helper = new THREE.DirectionalLightHelper( directionalLight, 1000 );
+  // plane.add(directionalLight);
+  helper.update()
+  scene.add(helper)
 }
 
 function loadSpaceShip() {
   gltfLoader.load("../assets/SciFi_Fighter.glb", function (gltf) {
     spaceshipModel = gltf.scene;
-    const scale = 0.003;
+    const scale = 0.002;
     spaceshipModel.scale.set(scale, scale, scale);
-    spaceshipModel.position.set(0, 6, 2);
+    spaceshipModel.position.set(0, 0, 2);
     spaceshipModel.rotation.x = -Math.PI / 2;
     scene.add(spaceshipModel);
-    spaceshipModel.add(directionalLight);
   });
 }
 
@@ -116,8 +119,31 @@ var skyboxMaterial = new THREE.MeshBasicMaterial({
 // create the skybox mesh
 var skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 
-skybox.rotation.y = Math.PI
+skybox.rotation.x = Math.PI/2
 
 // add the skybox to the scene
 scene.add(skybox);
+
+window.addEventListener('keydown', (event)=>{
+  const speed = 5;
+  const limit = speed * 3
+  switch(event.key){
+    case "D":
+    case "d":
+      spaceshipModel.position.x += speed;
+      break
+    case "a":
+    case "A":
+      spaceshipModel.position.x -= speed;
+      break
+    default:
+      break
+  }
+  if(spaceshipModel.position.x > limit){
+    spaceshipModel.position.x = limit
+  }else if(spaceshipModel.position.x < -limit){
+    spaceshipModel.position.x = -limit
+  }
+  camera.position.x = spaceshipModel.position.x;
+})
 animate();
