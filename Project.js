@@ -12,15 +12,13 @@ scene.add( axesHelper );
 const ambient = new THREE.AmbientLight(0xffffff);
 scene.add(ambient);
 
-const directionalLight = new THREE.DirectionalLight( 0xffffff, 10 );
-directionalLight.position.set(5,0,0);
-scene.add( directionalLight );
+
 
 // create the spherical terrain
 var sphereGeometry = new THREE.SphereGeometry(6, 32, 32);
 var sphereMaterial = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('planet.jpg') });
 var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.position.set(0, 0, 2.5);
+sphere.position.set(0, 0, 0);
 sphere.rotation.x = Math.PI/2;
 
 // create the character
@@ -50,14 +48,19 @@ controls.update();
 const gltfLoader = new GLTFLoader();
 
 let spaceshipModel;
+const directionalLight = new THREE.DirectionalLight( 0xffffff, 10 );
+directionalLight.position.set(10,0,0);
 
 gltfLoader.load('Free_SciFi-Fighter/untitled.glb', function(gltf) {
     spaceshipModel = gltf.scene;
-    spaceshipModel.scale.set(0.0003, 0.0003, 0.0003);
-    spaceshipModel.position.set(10,10,10)
+    const scale = 0.003
+    spaceshipModel.scale.set(scale, scale, scale);
+    spaceshipModel.position.set(0,6,0)
     spaceshipModel.rotation.y = Math.PI/2;
-    scene.add(spaceshipModel);
+    sphere.add(spaceshipModel);
+    spaceshipModel.add( directionalLight );
 });
+
 
 // create a variable to keep track of the running animation
 var runAnimation = 0;
@@ -65,7 +68,6 @@ var runAnimation = 0;
 // create the update function
 function update() {
     requestAnimationFrame(update);
-
     // update the running animation
     //runAnimation += 0.001;
 
@@ -78,14 +80,14 @@ function update() {
     spaceshipModel.position.z = Math.cos(runAnimation) * radius;
     
     // update the camera position to be on the surface of the sphere
-    camera.position.x = 20;
-    camera.position.y = 0;
-    camera.position.z = 0;
+    camera.position.x = spaceshipModel.position.x - 1;
+    camera.position.y = spaceshipModel.position.y;
+    camera.position.z = spaceshipModel.position.z;
     
 
     camera.lookAt(spaceshipModel.position);
-    camera.rotation.z = -Math.PI/2;
-    //camera.rotation.y = -Math.PI/2;
+    // camera.rotation.z = -Math.PI/2;
+    // camera.rotation.y = -Math.PI/2;
 
     // render the scene
     renderer.render(scene, camera);
