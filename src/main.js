@@ -1,12 +1,9 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
 import { GUI } from "https://cdn.skypack.dev/three@0.136/examples/jsm/libs/lil-gui.module.min.js";
-import { EffectComposer } from "https://cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "https://cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/RenderPass.js";
-import { FilmPass } from "https://cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/FilmPass.js";
-import { BloomPass } from "https://cdn.skypack.dev/three@0.136/examples/jsm/postprocessing/BloomPass.js";
 
-// alert("Controls: Use A to go left and D to go right\nHow To Play: avoid the monster or collect the mushroom to get a shield that allows you to kill the monster.\nGet score by surviving and killing the mosnter")
+
+alert("Controls: Use A to go left and D to go right\nHow To Play: avoid the monster or collect the mushroom to get a shield that allows you to kill the monster.\nGet score by surviving and killing the mosnter.\nPlease Press The \"Toggle Sound\" Button to hear the sounds. DEFAULT IS MUTED")
 
 // Set up the scene
 let scene;
@@ -42,11 +39,18 @@ const enemySpawningSound = new THREE.Audio(listener);
 const poweringUpSound = new THREE.Audio(listener);
 const poweringDownSound = new THREE.Audio(listener);
 const defeatSound = new THREE.Audio(listener);
+const bgMusic = new THREE.Audio(listener);
+
+audioLoader.load("../assets/sounds/bgMusic.mp3", function (buffer) {
+  bgMusic.setBuffer(buffer);
+  bgMusic.setLoop(false);
+  bgMusic.setVolume(0.3);
+});
 
 audioLoader.load("../assets/sounds/running.mp3", function (buffer) {
   runningSound.setBuffer(buffer);
   runningSound.setLoop(false);
-  runningSound.setVolume(0.1);
+  runningSound.setVolume(0.3);
   // runningSound.play()
 });
 audioLoader.load("../assets/sounds/monsterSpawning.mp3", function (buffer) {
@@ -90,7 +94,7 @@ function createPlane() {
 }
 function createScene() {
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x11111f, 0.04);
+  scene.fog = new THREE.FogExp2(0x11111f, 0.05);
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -195,6 +199,10 @@ function animate() {
   plane.position.y -= 0.1;
   enemyModel.position.y -= 0.1;
   mushroomModel.position.y -= 0.1;
+  instancedMeshRight.position.y -= 0.1;
+  instancedMeshLeft.position.y -= 0.1;
+  grassFloorLeft.position.y -= 0.1;
+  grassFloorRight.position.y -= 0.1;
 
   if (destination - playerModel.position.x > 0.5) {
     playerModel.rotation.y = Math.PI - Math.PI / 6;
@@ -215,6 +223,12 @@ function animate() {
     }
     mushroomModel.position.set(random_coord(), 30, 1);
   }
+  if(instancedMeshLeft.position.y < -50){
+    instancedMeshLeft.position.y = 0;
+    instancedMeshRight.position.y = 0;
+    grassFloorLeft.position.y = 0;
+    grassFloorRight.position.y = 0;
+  }
 
   if (isColliding(playerModel, enemyModel)) {
     if (poweredUp) {
@@ -227,8 +241,12 @@ function animate() {
         poweringDownSound.play();
       }
     } else {
+      bgMusic.stop()
+      runningSound.stop();
       defeatSound.play();
+      
       alert("YOU LOST");
+
       location.reload();
     }
   }
@@ -293,15 +311,15 @@ function initUI() {
   const soundButton = document.getElementById("sound-btn");
   const onSoundToggle = () => {
     if (playSFX) {
+      bgMusic.stop()
       runningSound.stop();
       playSFX = false;
     } else {
+      bgMusic.play()
       runningSound.play();
       playSFX = true;
     }
   };
-  playSFX = false;
-  onSoundToggle();
   soundButton.onclick = onSoundToggle;
 }
 
@@ -439,23 +457,23 @@ const leavesMaterial = new THREE.ShaderMaterial({
 // MESH
 /////////
 
-const instanceNumber = 2 * 5000;
+const instanceNumber =  4 * 5000;
 const dummy = new THREE.Object3D();
 
-const geometry = new THREE.PlaneGeometry( 0.1, 3, 1, 4 );
+const geometry = new THREE.PlaneGeometry( 0.1, 0.5, 1, 4 );
 geometry.translate( 0, 0.5, 0 ); // move grass blade geometry lowest point at 0.
 
-const instancedMesh = new THREE.InstancedMesh( geometry, leavesMaterial, instanceNumber );
-
+const instancedMeshRight = new THREE.InstancedMesh( geometry, leavesMaterial, instanceNumber );
+const instancedMeshLeft = new THREE.InstancedMesh( geometry, leavesMaterial, instanceNumber );
 
 // Position and scale the grass blade instances randomly.
 
 for ( let i=0 ; i<instanceNumber ; i++ ) {
 
 	dummy.position.set(
-  	( Math.random() - 0.5 ) * 10,
+  	( Math.random() - 0.5 ) * 50,
     0,
-    ( Math.random() - 0.5 ) * 10
+    ( Math.random() - 0.5 ) * 200
   );
   
   dummy.scale.setScalar( 0.5 + Math.random() * 0.5 );
@@ -463,15 +481,37 @@ for ( let i=0 ; i<instanceNumber ; i++ ) {
   dummy.rotation.y = Math.random() * Math.PI;
   
   dummy.updateMatrix();
-  instancedMesh.setMatrixAt( i, dummy.matrix );
-
+  instancedMeshRight.setMatrixAt( i, dummy.matrix );
+  instancedMeshLeft.setMatrixAt(i, dummy.matrix);  
 }
 
-instancedMesh.position.set(25, 0, 0)
-instancedMesh.rotation.x = Math.PI / 2
-instancedMesh.scale.set(1, 1, 1)
-scene.add( instancedMesh );
+const grassGeometry = new THREE.PlaneGeometry(50,200);
+const grassTexture = new THREE.TextureLoader().load("../assets/grassGround.jpg");
+const grassMaterial = new THREE.MeshBasicMaterial({map:grassTexture})
+grassMaterial.map.wrapS = THREE.RepeatWrapping;
+grassMaterial.map.wrapT = THREE.RepeatWrapping;
+grassMaterial.map.repeat.set(5, 20);
 
+const grassFloorRight = new THREE.Mesh(grassGeometry,grassMaterial);
+const grassFloorLeft = new THREE.Mesh(grassGeometry,grassMaterial);
+
+grassFloorRight.position.set(42.5, 0, 0)
+
+scene.add(grassFloorRight);
+
+grassFloorLeft.position.set(-42.5, 0, 0)
+
+scene.add(grassFloorLeft);
+
+instancedMeshRight.position.set(42.5, 0, 0)
+instancedMeshRight.rotation.x = Math.PI / 2
+//instancedMesh.scale.set(1, 1, 1)
+scene.add( instancedMeshRight );
+
+instancedMeshLeft.position.set(-42.5, 0, 0)
+instancedMeshLeft.rotation.x = Math.PI / 2
+//instancedMesh.scale.set(1, 1, 1)
+scene.add( instancedMeshLeft );
 
 initUI();
 animate();
