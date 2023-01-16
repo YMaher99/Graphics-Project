@@ -45,13 +45,13 @@ const bgMusic = new THREE.Audio(listener);
 
 audioLoader.load("../assets/sounds/bgMusic.mp3", function (buffer) {
   bgMusic.setBuffer(buffer);
-  bgMusic.setLoop(false);
-  bgMusic.setVolume(0.3);
+  bgMusic.setLoop(true);
+  bgMusic.setVolume(0.1);
 });
 
 audioLoader.load("../assets/sounds/running.mp3", function (buffer) {
   runningSound.setBuffer(buffer);
-  runningSound.setLoop(false);
+  runningSound.setLoop(true);
   runningSound.setVolume(0.3);
   // runningSound.play()
 });
