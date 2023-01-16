@@ -1,8 +1,5 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
-import { OrbitControls } from "https://cdn.skypack.dev/three@0.136/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
-import { Water } from "https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Water.js";
-import { Sky } from "https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Sky.js";
 
 // Set up the scene
 let scene;
@@ -22,6 +19,8 @@ let sphere;
 let destination = 0;
 
 let playSFX = false;
+let enemyMixer;
+let playerMixer;
 
 const ambient = new THREE.AmbientLight(0xffffff);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -136,6 +135,12 @@ function loadSpaceShip() {
     playerModel.rotation.x = Math.PI / 2;
     playerModel.rotation.y = Math.PI;
 
+    // create an animation mixer
+    playerMixer = new THREE.AnimationMixer(playerModel);
+
+    // Get the animations from the GLTF file
+    let animations = gltf.animations;
+    playerMixer.clipAction(animations[0]).play()
     // create the sphere geometry
     const sphereGeometry = new THREE.SphereGeometry(
       4,
@@ -179,7 +184,7 @@ function animate() {
   plane.position.y -= 0.1;
   enemyModel.position.y -= 0.1;
   mushroomModel.position.y -= 0.1;
-  playerModel.position.x += (destination - playerModel.position.x) / 20
+  playerModel.position.x += (destination - playerModel.position.x) / 40
   console.log(playerModel.position.x)
   camera.position.x = playerModel.position.x;
   if (plane.position.y < -50) {
@@ -209,6 +214,8 @@ function animate() {
       poweringUpSound.play();
     }
   }
+  enemyMixer.update(delta)
+  playerMixer.update(delta)
   renderer.render(scene, camera);
 
 }
@@ -302,6 +309,21 @@ gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
   enemyModel = gltf.scene;
   const scale = 1.5;
   enemyModel.scale.set(scale, scale, scale);
+
+  // create an animation mixer
+  enemyMixer = new THREE.AnimationMixer(enemyModel);
+
+  // Get the animations from the GLTF file
+  let animations = gltf.animations;
+  enemyMixer.clipAction(animations[2]).play()
+
+  // // Add the animations to the mixer
+  // for (var i = 0; i < animations.length; i++) {
+  //     var clip = animations[i];
+  //     var action = mixer.clipAction(clip);
+  //     action.play();
+  // }
+
 
   enemyModel.position.set(random_coord(), 40, 0);
   enemyModel.rotation.x = Math.PI / 2;
