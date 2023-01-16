@@ -19,6 +19,7 @@ let enemyModel;
 let mushroomModel;
 let poweredUp = false;
 let sphere;
+let destination = 0;
 
 let playSFX = false;
 
@@ -167,12 +168,16 @@ function loadSpaceShip() {
 }
 
 // Animate the scene
+let clock = new THREE.Clock()
 function animate() {
+
   requestAnimationFrame(animate);
+  let delta = clock.getDelta()
   renderer.render(scene, camera);
   plane.position.y -= 0.1;
   enemyModel.position.y -= 0.1;
   mushroomModel.position.y -= 0.1;
+  playerModel.position.x += (destination - playerModel.position.x) * delta
 
   if (plane.position.y < -50) {
     plane.position.y = 0;
@@ -262,19 +267,21 @@ window.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "D":
     case "d":
-      playerModel.position.x += speed;
+      // playerModel.position.x += speed;
+      destination += speed;
       break;
     case "a":
     case "A":
-      playerModel.position.x -= speed;
+      // playerModel.position.x -= speed;
+      destination -= speed;
       break;
     default:
       break;
   }
-  if (playerModel.position.x > limit) {
-    playerModel.position.x = limit;
-  } else if (playerModel.position.x < -limit) {
-    playerModel.position.x = -limit;
+  if (destination > limit) {
+    destination = limit;
+  } else if (destination < -limit) {
+    destination = -limit;
   }
   if (poweredUp) {
     sphere.position.set(playerModel.position.x, 2, -0.5);
