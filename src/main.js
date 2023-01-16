@@ -1,6 +1,7 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
 import { GUI } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/libs/lil-gui.module.min.js';
+import { Water } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/objects/Water.js';
 
 alert("Controls: Use A to go left and D to go right\nHow To Play: avoid the monster or collect the mushroom to get a shield that allows you to kill the monster.\nGet score by surviving and killing the mosnter")
 
@@ -86,6 +87,7 @@ function createPlane() {
 }
 function createScene() {
   scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x11111f, 0.04);
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -94,6 +96,8 @@ function createScene() {
   );
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(scene.fog.color);
+
   document.body.appendChild(renderer.domElement);
   //scene.add(coinMesh);
 
