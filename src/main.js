@@ -173,12 +173,15 @@ function animate() {
 
   requestAnimationFrame(animate);
   let delta = clock.getDelta()
-  renderer.render(scene, camera);
+  if (poweredUp) {
+    sphere.position.set(playerModel.position.x, 2, -0.5);
+  }
   plane.position.y -= 0.1;
   enemyModel.position.y -= 0.1;
   mushroomModel.position.y -= 0.1;
-  playerModel.position.x += (destination - playerModel.position.x) * delta
-
+  playerModel.position.x += (destination - playerModel.position.x) / 20
+  console.log(playerModel.position.x)
+  camera.position.x = playerModel.position.x;
   if (plane.position.y < -50) {
     plane.position.y = 0;
     enemyModel.position.set(random_coord(), 40, 0);
@@ -206,6 +209,8 @@ function animate() {
       poweringUpSound.play();
     }
   }
+  renderer.render(scene, camera);
+
 }
 
 function createSkyBox() {
@@ -240,7 +245,7 @@ function isColliding(obj1, obj2) {
       return (
         obj2.position.y > -0.05 &&
         obj2.position.y < 0.05 &&
-        obj1.position.x == obj2.position.x
+        Math.abs(obj1.position.x - obj2.position.x) < 0.2
       );
     }
   }
@@ -283,9 +288,7 @@ window.addEventListener("keydown", (event) => {
   } else if (destination < -limit) {
     destination = -limit;
   }
-  if (poweredUp) {
-    sphere.position.set(playerModel.position.x, 2, -0.5);
-  }
+
   camera.position.x = playerModel.position.x;
 });
 
