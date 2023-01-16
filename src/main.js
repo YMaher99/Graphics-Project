@@ -16,17 +16,61 @@ let coinMaterial; //gold color;
 let coinMesh;
 let playerModel;
 let enemyModel;
+let mushroomModel;
+let poweredUp = false;
+let sphere;
+
+let playSFX = false;
+
 const ambient = new THREE.AmbientLight(0xffffff);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 const gltfLoader = new GLTFLoader();
+const listener = new THREE.AudioListener();
+const audioLoader = new THREE.AudioLoader();
+
+// Loading the eat sound
+const runningSound = new THREE.Audio(listener);
+const enemySpawningSound = new THREE.Audio(listener);
+const poweringUpSound = new THREE.Audio(listener);
+const poweringDownSound = new THREE.Audio(listener);
+
+audioLoader.load("../assets/sounds/running.mp3", function (buffer) {
+  runningSound.setBuffer(buffer);
+  runningSound.setLoop(false);
+  runningSound.setVolume(0.1);
+  // runningSound.play()
+});
+audioLoader.load("../assets/sounds/monsterSpawning.mp3", function (buffer) {
+  enemySpawningSound.setBuffer(buffer);
+  enemySpawningSound.setLoop(false);
+  enemySpawningSound.setVolume(0.1);
+});
+
+audioLoader.load("../assets/sounds/powerupSound.mp3", function (buffer) {
+  poweringUpSound.setBuffer(buffer);
+  poweringUpSound.setLoop(false);
+  poweringUpSound.setVolume(0.1);
+});
+audioLoader.load("../assets/sounds/powerDownSound.mp3", function (buffer) {
+  poweringDownSound.setBuffer(buffer);
+  poweringDownSound.setLoop(false);
+  poweringDownSound.setVolume(0.1);
+});
 
 // Add the coin to the scene
 
 function createPlane() {
   geometry = new THREE.PlaneGeometry(50, 1000, 100, 100);
-  material = new THREE.MeshPhongMaterial({
-    color: 0xff8875,
+  const texture = new THREE.TextureLoader().load("../assets/asphalt.jpg");
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+
+  // set the number of times the texture should repeat in each direction
+  texture.repeat.set(10, 400);
+  material = new THREE.MeshBasicMaterial({
+    // color: 0xff8875,
     side: THREE.DoubleSide,
+    map: texture,
   });
   plane = new THREE.Mesh(geometry, material);
 }
@@ -55,6 +99,7 @@ function createScene() {
   camera.rotation.x -= Math.PI / 6;
   // Set up the camera
   camera.position.z = 3;
+  camera.add(listener);
 }
 
 function createCoin() {
@@ -89,18 +134,36 @@ function loadSpaceShip() {
     playerModel.position.set(0, 0, 0);
     playerModel.rotation.x = Math.PI / 2;
     playerModel.rotation.y = Math.PI;
-  
-  
+
+    // create the sphere geometry
+    const sphereGeometry = new THREE.SphereGeometry(
+      4,
+      32,
+      32,
+      0,
+      Math.PI,
+      0,
+      Math.PI
+    );
+
+    // create the sphere material
+    const sphereMaterial = new THREE.MeshPhongMaterial({
+      color: "#000048",
+      transparent: true,
+      opacity: 0.5,
+    });
+
+    // create the sphere mesh
+    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    // sphere.rotation.y =  -Math.PI /2
+    // sphere.rotation.z =  Math.PI
+
+    // position the sphere
+    // sphere.position.set(0, 2, -0.5);
+    sphere.position.set(0, 2, -10);
     scene.add(playerModel);
+    scene.add(sphere);
   });
-/*   gltfLoader.load("../assets/SciFi_Fighter.glb", function (gltf) {
-    spaceshipModel = gltf.scene;
-    const scale = 0.002;
-    spaceshipModel.scale.set(scale, scale, scale);
-    spaceshipModel.position.set(0, 0, 2);
-    spaceshipModel.rotation.x = -Math.PI / 2;
-    //scene.add(spaceshipModel);
-  }); */
 }
 
 // Animate the scene
@@ -109,16 +172,38 @@ function animate() {
   renderer.render(scene, camera);
   plane.position.y -= 0.1;
   enemyModel.position.y -= 0.1;
-  
+  mushroomModel.position.y -= 0.1;
+
   if (plane.position.y < -50) {
     plane.position.y = 0;
-    enemyModel.position.set(random_coord(),40,0);
+    enemyModel.position.set(random_coord(), 40, 0);
+    if (playSFX) {
+      enemySpawningSound.play();
+    }
+    mushroomModel.position.set(random_coord(), 30, 1);
   }
-  if (isColliding(playerModel,enemyModel)){console.log("BOO")}
+
+  if (isColliding(playerModel, enemyModel)) {
+    if (poweredUp) {
+      enemyModel.position.set(0, 0, -50);
+      poweredUp = false;
+      sphere.position.set(0, 2, -10);
+      if (playSFX) {
+        poweringDownSound.play();
+      }
+    }
+  }
+  if (isColliding(playerModel, mushroomModel)) {
+    poweredUp = true;
+    sphere.position.set(playerModel.position.x, 2, -0.5);
+
+    if (playSFX) {
+      poweringUpSound.play();
+    }
+  }
 }
 
 function createSkyBox() {
-
   // create the skybox geometry
   var skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
 
@@ -145,13 +230,31 @@ generateCoinPosition();
 createSkyBox();
 
 function isColliding(obj1, obj2) {
-	if (obj1) {
-	  if (obj2) {
-
-		return ((obj2.position.y > -0.05 && obj2.position.y < 0.05) && obj1.position.x == obj2.position.x)
-	  }
-	}
+  if (obj1) {
+    if (obj2) {
+      return (
+        obj2.position.y > -0.05 &&
+        obj2.position.y < 0.05 &&
+        obj1.position.x == obj2.position.x
+      );
+    }
   }
+}
+
+function initUI() {
+  const soundButton = document.getElementById("sound-btn");
+  const onSoundToggle = () => {
+    if (playSFX) {
+      runningSound.stop();
+      playSFX = false;
+    } else {
+      runningSound.play();
+      playSFX = true;
+    }
+  };
+  onSoundToggle();
+  soundButton.onclick = onSoundToggle;
+}
 
 window.addEventListener("keydown", (event) => {
   const speed = 5;
@@ -173,24 +276,39 @@ window.addEventListener("keydown", (event) => {
   } else if (playerModel.position.x < -limit) {
     playerModel.position.x = -limit;
   }
+  if (poweredUp) {
+    sphere.position.set(playerModel.position.x, 2, -0.5);
+  }
   camera.position.x = playerModel.position.x;
 });
 
-function random_coord(){
-	return Math.random()>0.5 ?  Math.floor(Math.random()*3) * 5:  -1 * (Math.floor(Math.random()*3)) *5 ;
+function random_coord() {
+  return Math.random() > 0.5
+    ? Math.floor(Math.random() * 3) * 5
+    : -1 * Math.floor(Math.random() * 3) * 5;
 }
 
 gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
   enemyModel = gltf.scene;
   const scale = 1.5;
   enemyModel.scale.set(scale, scale, scale);
-  
+
   enemyModel.position.set(random_coord(), 40, 0);
   enemyModel.rotation.x = Math.PI / 2;
 
-
-
   scene.add(enemyModel);
-})
+});
 
+gltfLoader.load("../assets/mushroom.glb", function (gltf) {
+  mushroomModel = gltf.scene;
+  const scale = 2;
+  mushroomModel.scale.set(scale, scale, scale);
+
+  mushroomModel.position.set(random_coord(), 30, 1);
+  mushroomModel.rotation.x = Math.PI / 2;
+
+  scene.add(mushroomModel);
+});
+
+initUI();
 animate();
