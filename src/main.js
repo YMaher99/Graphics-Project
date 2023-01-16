@@ -28,6 +28,8 @@ let playerMixer;
 
 const ambient = new THREE.AmbientLight(0xffffff, 0.5);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+const pointLight = new THREE.PointLight(0xffffff, 1)
+pointLight.position.set(0, 0, 10)
 
 const gltfLoader = new GLTFLoader();
 const listener = new THREE.AudioListener();
@@ -263,6 +265,7 @@ function animate() {
   }
 	leavesMaterial.uniforms.time.value = clock.getElapsedTime();
   leavesMaterial.uniformsNeedUpdate = true;
+  pointLight.position.x = playerModel.position.x;
   enemyMixer.update(delta);
   playerMixer.update(delta);
   renderer.clear()
@@ -513,5 +516,17 @@ instancedMeshLeft.rotation.x = Math.PI / 2
 //instancedMesh.scale.set(1, 1, 1)
 scene.add( instancedMeshLeft );
 
+scene.add(pointLight)
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
 initUI();
 animate();
