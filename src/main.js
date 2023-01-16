@@ -1,6 +1,8 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
+import { GUI } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/libs/lil-gui.module.min.js';
 
+alert("Controls: Use A to go left and D to go right\nHow To Play: avoid the monster or collect the mushroom to get a shield that allows you to kill the monster.\nGet score by surviving and killing the mosnter")
 
 // Set up the scene
 let scene;
@@ -18,6 +20,7 @@ let mushroomModel;
 let poweredUp = false;
 let sphere;
 let destination = 0;
+let score = 0;
 
 let playSFX = false;
 let enemyMixer;
@@ -34,6 +37,7 @@ const runningSound = new THREE.Audio(listener);
 const enemySpawningSound = new THREE.Audio(listener);
 const poweringUpSound = new THREE.Audio(listener);
 const poweringDownSound = new THREE.Audio(listener);
+const defeatSound = new THREE.Audio(listener);
 
 audioLoader.load("../assets/sounds/running.mp3", function (buffer) {
   runningSound.setBuffer(buffer);
@@ -56,6 +60,11 @@ audioLoader.load("../assets/sounds/powerDownSound.mp3", function (buffer) {
   poweringDownSound.setBuffer(buffer);
   poweringDownSound.setLoop(false);
   poweringDownSound.setVolume(0.1);
+});
+audioLoader.load("../assets/sounds/defeat.mp3", function(buffer){
+  defeatSound.setBuffer(buffer);
+  defeatSound.setLoop(false);
+  defeatSound.setVolume(0.5);
 });
 
 // Add the coin to the scene
@@ -87,8 +96,7 @@ function createScene() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
   //scene.add(coinMesh);
-  const axesHelper = new THREE.AxesHelper(1000);
-  scene.add(axesHelper);
+
 
   camera.rotation.x = Math.PI / 2;
 
@@ -121,10 +129,6 @@ function addLight() {
   scene.add(ambient);
   scene.add(directionalLight);
   directionalLight.position.set(0, -1, 20);
-  const helper = new THREE.DirectionalLightHelper(directionalLight, 1000);
-  // plane.add(directionalLight);
-  helper.update();
-  scene.add(helper);
 }
 
 function loadSpaceShip() {
@@ -155,7 +159,7 @@ function loadSpaceShip() {
 
     // create the sphere material
     const sphereMaterial = new THREE.MeshPhongMaterial({
-      color: "#000048",
+      color: "#218ffe",
       transparent: true,
       opacity: 0.5,
     });
@@ -178,6 +182,9 @@ let clock = new THREE.Clock()
 function animate() {
 
   requestAnimationFrame(animate);
+
+
+
   let delta = clock.getDelta()
   if (poweredUp) {
     sphere.position.set(playerModel.position.x, 2, -0.5);
@@ -191,8 +198,8 @@ function animate() {
   else{playerModel.rotation.y =  Math.PI}
 
   playerModel.position.x += (destination - playerModel.position.x) / 20
-  console.log(playerModel.position.x)
   camera.position.x = playerModel.position.x;
+
   if (plane.position.y < -50) {
     plane.position.y = 0;
     enemyModel.position.set(random_coord(), 40, 0);
@@ -207,11 +214,23 @@ function animate() {
       enemyModel.position.set(0, 0, -50);
       poweredUp = false;
       sphere.position.set(0, 2, -10);
+      score += 100;
+      score_folder.controllers[0].setValue(Math.round(score))
       if (playSFX) {
         poweringDownSound.play();
       }
     }
+    else{
+      defeatSound.play()
+      alert("YOU LOST")
+      location.reload()
+    }
+
   }
+  score += 0.5
+  score_folder.controllers[0].setValue(Math.round(score))
+
+
   if (isColliding(playerModel, mushroomModel)) {
     poweredUp = true;
     sphere.position.set(playerModel.position.x, 2, -0.5);
@@ -258,7 +277,7 @@ function isColliding(obj1, obj2) {
       return (
         obj2.position.y > -0.05 &&
         obj2.position.y < 0.05 &&
-        Math.abs(obj1.position.x - obj2.position.x) < 0.2
+        Math.abs(obj1.position.x - obj2.position.x) < 1
       );
     }
   }
@@ -274,7 +293,9 @@ function initUI() {
       runningSound.play();
       playSFX = true;
     }
+    
   };
+  playSFX = false;
   onSoundToggle();
   soundButton.onclick = onSoundToggle;
 }
@@ -307,8 +328,8 @@ window.addEventListener("keydown", (event) => {
 
 function random_coord() {
   return Math.random() > 0.5
-    ? Math.floor(Math.random() * 3) * 5
-    : -1 * Math.floor(Math.random() * 3) * 5;
+    ? Math.floor((Math.random() * 3) + 1) * 5
+    : -1 * Math.floor((Math.random() * 3)+1) * 5;
 }
 
 gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
@@ -323,12 +344,7 @@ gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
   let animations = gltf.animations;
   enemyMixer.clipAction(animations[2]).play()
 
-  // // Add the animations to the mixer
-  // for (var i = 0; i < animations.length; i++) {
-  //     var clip = animations[i];
-  //     var action = mixer.clipAction(clip);
-  //     action.play();
-  // }
+
 
 
   enemyModel.position.set(random_coord(), 40, 0);
@@ -347,6 +363,21 @@ gltfLoader.load("../assets/mushroom.glb", function (gltf) {
 
   scene.add(mushroomModel);
 });
+
+let gui = new GUI();
+var myObject = {
+	Score: 0,
+};
+var score_folder = gui.addFolder("Score");
+score_folder.add(myObject,"Score")
+var controls = {
+	Left: "A",
+	Right:"D"
+}
+gui.title("")
+var controls_folder = gui.addFolder("Controls")
+controls_folder.add(controls,"Left")
+controls_folder.add(controls,"Right")
 
 
 initUI();
