@@ -14,9 +14,10 @@ let plane;
 let coinGeometry;
 let coinMaterial; //gold color;
 let coinMesh;
-let spaceshipModel;
+let playerModel;
+let enemyModel;
 const ambient = new THREE.AmbientLight(0xffffff);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 const gltfLoader = new GLTFLoader();
 
 // Add the coin to the scene
@@ -46,7 +47,7 @@ function createScene() {
 
   camera.rotation.x = Math.PI / 2;
 
-  plane.position.set(0, -2, -10);
+  plane.position.set(0, -2, 0);
   scene.add(plane);
 
   camera.position.set(0, -4, 0);
@@ -72,8 +73,8 @@ function generateCoinPosition() {
 
 function addLight() {
   scene.add(ambient);
-  plane.add(directionalLight);
-  directionalLight.position.set(0, -1, 5);
+  scene.add(directionalLight);
+  directionalLight.position.set(0, -1, 20);
   const helper = new THREE.DirectionalLightHelper(directionalLight, 1000);
   // plane.add(directionalLight);
   helper.update();
@@ -81,14 +82,25 @@ function addLight() {
 }
 
 function loadSpaceShip() {
-  gltfLoader.load("../assets/SciFi_Fighter.glb", function (gltf) {
+  gltfLoader.load("../assets/player/player.glb", function (gltf) {
+    playerModel = gltf.scene;
+    const scale = 1.5;
+    playerModel.scale.set(scale, scale, scale);
+    playerModel.position.set(0, 0, 0);
+    playerModel.rotation.x = Math.PI / 2;
+    playerModel.rotation.y = Math.PI;
+  
+  
+    scene.add(playerModel);
+  });
+/*   gltfLoader.load("../assets/SciFi_Fighter.glb", function (gltf) {
     spaceshipModel = gltf.scene;
     const scale = 0.002;
     spaceshipModel.scale.set(scale, scale, scale);
     spaceshipModel.position.set(0, 0, 2);
     spaceshipModel.rotation.x = -Math.PI / 2;
-    scene.add(spaceshipModel);
-  });
+    //scene.add(spaceshipModel);
+  }); */
 }
 
 // Animate the scene
@@ -96,9 +108,13 @@ function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   plane.position.y -= 0.1;
+  enemyModel.position.y -= 0.1;
+  
   if (plane.position.y < -50) {
     plane.position.y = 0;
+    enemyModel.position.y = 40;
   }
+  if (isColliding(playerModel,enemyModel)){console.log("BOO")}
 }
 
 function createSkyBox() {
@@ -128,6 +144,14 @@ addLight();
 generateCoinPosition();
 createSkyBox();
 
+function isColliding(obj1, obj2) {
+	if (obj1) {
+	  if (obj2) {
+
+		return ((obj2.position.y > -0.05 && obj2.position.y < 0.05) && obj1.position.x == obj2.position.x)
+	  }
+	}
+  }
 
 window.addEventListener("keydown", (event) => {
   const speed = 5;
@@ -135,21 +159,34 @@ window.addEventListener("keydown", (event) => {
   switch (event.key) {
     case "D":
     case "d":
-      spaceshipModel.position.x += speed;
+      playerModel.position.x += speed;
       break;
     case "a":
     case "A":
-      spaceshipModel.position.x -= speed;
+      playerModel.position.x -= speed;
       break;
     default:
       break;
   }
-  if (spaceshipModel.position.x > limit) {
-    spaceshipModel.position.x = limit;
-  } else if (spaceshipModel.position.x < -limit) {
-    spaceshipModel.position.x = -limit;
+  if (playerModel.position.x > limit) {
+    playerModel.position.x = limit;
+  } else if (playerModel.position.x < -limit) {
+    playerModel.position.x = -limit;
   }
-  camera.position.x = spaceshipModel.position.x;
+  camera.position.x = playerModel.position.x;
 });
+
+gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
+  enemyModel = gltf.scene;
+  const scale = 1.5;
+  enemyModel.scale.set(scale, scale, scale);
+  
+  enemyModel.position.set(0, 40, 0);
+  enemyModel.rotation.x = Math.PI / 2;
+
+
+
+  scene.add(enemyModel);
+})
 
 animate();
