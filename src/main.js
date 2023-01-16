@@ -1,6 +1,7 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
 
+
 // Set up the scene
 let scene;
 let camera;
@@ -184,7 +185,12 @@ function animate() {
   plane.position.y -= 0.1;
   enemyModel.position.y -= 0.1;
   mushroomModel.position.y -= 0.1;
-  playerModel.position.x += (destination - playerModel.position.x) / 40
+
+  if(destination - playerModel.position.x > 0.5){playerModel.rotation.y =  Math.PI - Math.PI/6}
+  else if (destination - playerModel.position.x < -0.5){playerModel.rotation.y =  Math.PI + Math.PI/6}
+  else{playerModel.rotation.y =  Math.PI}
+
+  playerModel.position.x += (destination - playerModel.position.x) / 20
   console.log(playerModel.position.x)
   camera.position.x = playerModel.position.x;
   if (plane.position.y < -50) {
@@ -209,7 +215,7 @@ function animate() {
   if (isColliding(playerModel, mushroomModel)) {
     poweredUp = true;
     sphere.position.set(playerModel.position.x, 2, -0.5);
-
+    mushroomModel.position.z = -50;
     if (playSFX) {
       poweringUpSound.play();
     }
@@ -341,6 +347,7 @@ gltfLoader.load("../assets/mushroom.glb", function (gltf) {
 
   scene.add(mushroomModel);
 });
+
 
 initUI();
 animate();
