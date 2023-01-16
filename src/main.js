@@ -112,7 +112,7 @@ function animate() {
   
   if (plane.position.y < -50) {
     plane.position.y = 0;
-    enemyModel.position.y = 40;
+    enemyModel.position.set(random_coord(),40,0);
   }
   if (isColliding(playerModel,enemyModel)){console.log("BOO")}
 }
@@ -176,12 +176,16 @@ window.addEventListener("keydown", (event) => {
   camera.position.x = playerModel.position.x;
 });
 
+function random_coord(){
+	return Math.random()>0.5 ?  Math.floor(Math.random()*3) * 5:  -1 * (Math.floor(Math.random()*3)) *5 ;
+}
+
 gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
   enemyModel = gltf.scene;
   const scale = 1.5;
   enemyModel.scale.set(scale, scale, scale);
   
-  enemyModel.position.set(0, 40, 0);
+  enemyModel.position.set(random_coord(), 40, 0);
   enemyModel.rotation.x = Math.PI / 2;
 
 
