@@ -1,8 +1,9 @@
+// Import threejs, DAT GUI, and GLTFLoader
 import * as THREE from "https://cdn.skypack.dev/three@0.136";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.136/examples/jsm/loaders/GLTFLoader.js";
 import { GUI } from "https://cdn.skypack.dev/three@0.136/examples/jsm/libs/lil-gui.module.min.js";
 
-
+// Show an alert message with instructions for the game
 alert("Controls: Use A to go left and D to go right\nHow To Play: avoid the monster or collect the mushroom to get a shield that allows you to kill the monster.\nGet score by surviving and killing the mosnter.\nPlease Press The \"Toggle Sound\" Button to hear the sounds. DEFAULT IS MUTED")
 
 // Set up the scene
@@ -26,16 +27,18 @@ let playSFX = false;
 let enemyMixer;
 let playerMixer;
 
+//create lights
 const ambient = new THREE.AmbientLight(0xffffff, 0.5);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 const pointLight = new THREE.PointLight(0xffffff, 1)
 pointLight.position.set(0, 0, 10)
 
+// create GLTF loader and audio listener
 const gltfLoader = new GLTFLoader();
 const listener = new THREE.AudioListener();
 const audioLoader = new THREE.AudioLoader();
 
-// Loading the eat sound
+// Loading the different sound effects
 const runningSound = new THREE.Audio(listener);
 const enemySpawningSound = new THREE.Audio(listener);
 const poweringUpSound = new THREE.Audio(listener);
@@ -43,55 +46,67 @@ const poweringDownSound = new THREE.Audio(listener);
 const defeatSound = new THREE.Audio(listener);
 const bgMusic = new THREE.Audio(listener);
 
+// load the background music
 audioLoader.load("../assets/sounds/bgMusic.mp3", function (buffer) {
   bgMusic.setBuffer(buffer);
   bgMusic.setLoop(true);
   bgMusic.setVolume(0.1);
 });
 
+//load the running sound
 audioLoader.load("../assets/sounds/running.mp3", function (buffer) {
   runningSound.setBuffer(buffer);
   runningSound.setLoop(true);
   runningSound.setVolume(0.3);
   // runningSound.play()
 });
+
+//load the enemy spawning sound
 audioLoader.load("../assets/sounds/monsterSpawning.mp3", function (buffer) {
   enemySpawningSound.setBuffer(buffer);
   enemySpawningSound.setLoop(false);
   enemySpawningSound.setVolume(0.1);
 });
 
+//load the powering up sound
 audioLoader.load("../assets/sounds/powerupSound.mp3", function (buffer) {
   poweringUpSound.setBuffer(buffer);
   poweringUpSound.setLoop(false);
   poweringUpSound.setVolume(0.1);
 });
+
+// load the powering down sound
 audioLoader.load("../assets/sounds/powerDownSound.mp3", function (buffer) {
   poweringDownSound.setBuffer(buffer);
   poweringDownSound.setLoop(false);
   poweringDownSound.setVolume(0.1);
 });
+
+// load the defeat sound
 audioLoader.load("../assets/sounds/defeat.mp3", function (buffer) {
   defeatSound.setBuffer(buffer);
   defeatSound.setLoop(false);
   defeatSound.setVolume(0.5);
 });
 
-// Add the coin to the scene
-
+// Function to create the plane
 function createPlane() {
+  // create the plane geometry
   const geometry = new THREE.PlaneGeometry(35, 1000, 100, 100);
+  // load the texture for the plane
   const texture = new THREE.TextureLoader().load("../assets/asphalt.jpg");
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
 
   // set the number of times the texture should repeat in each direction
   texture.repeat.set(10, 400);
+  // Create the material for the plane
   material = new THREE.MeshBasicMaterial({
     // color: 0xff8875,
     side: THREE.DoubleSide,
     map: texture,
   });
+  // Create the plane mesh
   plane = new THREE.Mesh(geometry, material);
 }
 function createScene() {
@@ -137,18 +152,24 @@ function generateCoinPosition() {
   coinMesh.position.set(x, y, z);
 }
 
+//function to add ambient and directional light to the scene, and set the position of the directional light.
 function addLight() {
   scene.add(ambient);
   scene.add(directionalLight);
   directionalLight.position.set(0, -1, 20);
 }
 
+// function to create the player
 function loadSpaceShip() {
   gltfLoader.load("../assets/player/player.glb", function (gltf) {
+    // Assigns the loaded model to the playerModel variable
     playerModel = gltf.scene;
     const scale = 1.5;
+    //scale the player
     playerModel.scale.set(scale, scale, scale);
+    //position the player
     playerModel.position.set(0, 0, 0);
+    //rotate the player
     playerModel.rotation.x = Math.PI / 2;
     playerModel.rotation.y = Math.PI;
 
@@ -178,11 +199,8 @@ function loadSpaceShip() {
 
     // create the sphere mesh
     sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    // sphere.rotation.y =  -Math.PI /2
-    // sphere.rotation.z =  Math.PI
 
     // position the sphere
-    // sphere.position.set(0, 2, -0.5);
     sphere.position.set(0, 2, -10);
     scene.add(playerModel);
     scene.add(sphere);
@@ -190,14 +208,18 @@ function loadSpaceShip() {
 }
 
 // Animate the scene
-let clock = new THREE.Clock();
+let clock = new THREE.Clock();//create a new clock to track the delta time for animation
 function animate() {
-  requestAnimationFrame(animate);
+  requestAnimationFrame(animate);//call the animate function to create a loop
 
-  let delta = clock.getDelta();
+  let delta = clock.getDelta();//get the delta time from the clock
+
+  // move the position of the sphere if the player is powered up
   if (poweredUp) {
     sphere.position.set(playerModel.position.x, 2, -0.5);
   }
+
+  // move the position of the plane, enemy model, mushroom model, instanced mesh, and grass floor downwards
   plane.position.y -= 0.1;
   enemyModel.position.y -= 0.1;
   mushroomModel.position.y -= 0.1;
@@ -206,6 +228,7 @@ function animate() {
   grassFloorLeft.position.y -= 0.1;
   grassFloorRight.position.y -= 0.1;
 
+  // rotate the player model based on its destination position
   if (destination - playerModel.position.x > 0.5) {
     playerModel.rotation.y = Math.PI - Math.PI / 6;
   } else if (destination - playerModel.position.x < -0.5) {
@@ -214,9 +237,11 @@ function animate() {
     playerModel.rotation.y = Math.PI;
   }
 
+  // move the player model towards its destination position
   playerModel.position.x += (destination - playerModel.position.x) / 20;
   camera.position.x = playerModel.position.x;
 
+  // check if the plane is out of bounds, if so reset its position and spawn a new enemy
   if (plane.position.y < -50) {
     plane.position.y = 0;
     enemyModel.position.set(random_coord(), 40, 0);
@@ -232,7 +257,9 @@ function animate() {
     grassFloorRight.position.y = 0;
   }
 
+  // check for collision between the player and enemy
   if (isColliding(playerModel, enemyModel)) {
+    //take action if player is powered up
     if (poweredUp) {
       enemyModel.position.set(0, 0, -50);
       poweredUp = false;
@@ -242,7 +269,9 @@ function animate() {
       if (playSFX) {
         poweringDownSound.play();
       }
-    } else {
+    }
+    //else end the game 
+    else {
       bgMusic.stop()
       runningSound.stop();
       defeatSound.play();
@@ -253,8 +282,9 @@ function animate() {
     }
   }
   score += 0.5;
-  score_folder.controllers[0].setValue(Math.round(score));
+  score_folder.controllers[0].setValue(Math.round(score));// update the score
 
+  // check for collision between the player and mushroom, if a collision is detected, power up the player
   if (isColliding(playerModel, mushroomModel)) {
     poweredUp = true;
     sphere.position.set(playerModel.position.x, 2, -0.5);
@@ -272,6 +302,7 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+//function to create a skybox
 function createSkyBox() {
   // create the skybox geometry
   var skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000);
@@ -298,6 +329,7 @@ addLight();
 generateCoinPosition();
 createSkyBox();
 
+// Function to check the collision between two objects
 function isColliding(obj1, obj2) {
   if (obj1) {
     if (obj2) {
@@ -310,6 +342,7 @@ function isColliding(obj1, obj2) {
   }
 }
 
+// function to sets up the user interface for controlling sound effects
 function initUI() {
   const soundButton = document.getElementById("sound-btn");
   const onSoundToggle = () => {
@@ -326,15 +359,18 @@ function initUI() {
   soundButton.onclick = onSoundToggle;
 }
 
+// Add an event listener for when a user presses keyboard buttons (i.e. controls for the game)
 window.addEventListener("keydown", (event) => {
   const speed = 5;
   const limit = speed * 3;
   switch (event.key) {
+    // if player press 'D' increments the destination by 5 to move to the right
     case "D":
     case "d":
       // playerModel.position.x += speed;
       destination += speed;
       break;
+    // if player press 'A' decrements the destination by 5 to move to the left  
     case "a":
     case "A":
       // playerModel.position.x -= speed;
@@ -343,23 +379,28 @@ window.addEventListener("keydown", (event) => {
     default:
       break;
   }
+  //if destination is out of road bonds set the destination to the limit
   if (destination > limit) {
     destination = limit;
   } else if (destination < -limit) {
     destination = -limit;
   }
-
+  //The camera's x position is then set to match the player's x position
   camera.position.x = playerModel.position.x;
 });
 
+//function to generate random coordinates for positioning the models
 function random_coord() {
+  // return either a positive or negative value of 5, 10, or 15
   return Math.random() > 0.5
     ? Math.floor(Math.random() * 3 + 1) * 5
     : -1 * Math.floor(Math.random() * 3 + 1) * 5;
 }
 
+// Load the "enemy" model using the GLTFLoader
 gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
   enemyModel = gltf.scene;
+  // Scale the enemy by 1.5
   const scale = 1.5;
   enemyModel.scale.set(scale, scale, scale);
 
@@ -370,38 +411,58 @@ gltfLoader.load("../assets/player/enemy.glb", function (gltf) {
   let animations = gltf.animations;
   enemyMixer.clipAction(animations[2]).play();
 
+  // Position the enemy at a random x coordinate
   enemyModel.position.set(random_coord(), 40, 0);
+  // Rotate the enemy 90 degrees on the x axis
   enemyModel.rotation.x = Math.PI / 2;
 
+  // Add the enemy to the scene
   scene.add(enemyModel);
 });
 
+// Load the "mushroom" model using the GLTFLoader
 gltfLoader.load("../assets/mushroom.glb", function (gltf) {
   mushroomModel = gltf.scene;
+  // Scale the mushroom by 2
   const scale = 2;
   mushroomModel.scale.set(scale, scale, scale);
 
+  // Position the mushroom at a random x coordinate
   mushroomModel.position.set(random_coord(), 30, 1);
+  // Rotate the mushroom 90 degrees on the x axis
   mushroomModel.rotation.x = Math.PI / 2;
 
+  // Add the mushroom to the scene
   scene.add(mushroomModel);
 });
 
+// Adding a GUI
 let gui = new GUI();
+
+// Score Values in the GUI
 var myObject = {
   Score: 0,
 };
+
+// Add a folder to the GUI to display the score
 var score_folder = gui.addFolder("Score");
 score_folder.add(myObject, "Score");
+
+// Control Values in the GUI
 var controls = {
   Left: "A",
   Right: "D",
 };
+
+// Set GUI title to empty string
 gui.title("");
+
+// Add a folder to the GUI to display the controls
 var controls_folder = gui.addFolder("Controls");
 controls_folder.add(controls, "Left");
 controls_folder.add(controls, "Right");
 
+// create vertex shader for the grass
 const vertexShader = `
   varying vec2 vUv;
   uniform float time;
@@ -433,6 +494,7 @@ const vertexShader = `
 	}
 `;
 
+// create fragmentt shader for the grass
 const fragmentShader = `
   varying vec2 vUv;
   
@@ -449,6 +511,7 @@ const uniforms = {
   }
 }
 
+// Create a new ShaderMaterial using the vertex and fragment shaders and the uniforms.
 const leavesMaterial = new THREE.ShaderMaterial({
 	vertexShader,
   fragmentShader,
@@ -488,6 +551,7 @@ for ( let i=0 ; i<instanceNumber ; i++ ) {
   instancedMeshLeft.setMatrixAt(i, dummy.matrix);  
 }
 
+// Create geometry, texture and material for the grass
 const grassGeometry = new THREE.PlaneGeometry(50,200);
 const grassTexture = new THREE.TextureLoader().load("../assets/grassGround.jpg");
 const grassMaterial = new THREE.MeshBasicMaterial({map:grassTexture})
@@ -495,15 +559,15 @@ grassMaterial.map.wrapS = THREE.RepeatWrapping;
 grassMaterial.map.wrapT = THREE.RepeatWrapping;
 grassMaterial.map.repeat.set(5, 20);
 
+// Create grass for the right and the left
 const grassFloorRight = new THREE.Mesh(grassGeometry,grassMaterial);
 const grassFloorLeft = new THREE.Mesh(grassGeometry,grassMaterial);
 
+// Position the right and left grass in the scene
 grassFloorRight.position.set(42.5, 0, 0)
-
 scene.add(grassFloorRight);
 
 grassFloorLeft.position.set(-42.5, 0, 0)
-
 scene.add(grassFloorLeft);
 
 instancedMeshRight.position.set(42.5, 0, 0)
@@ -516,17 +580,23 @@ instancedMeshLeft.rotation.x = Math.PI / 2
 //instancedMesh.scale.set(1, 1, 1)
 scene.add( instancedMeshLeft );
 
+// Add point light to the scene
 scene.add(pointLight)
 
+// Add event listener for resizing the game
 window.addEventListener( 'resize', onWindowResize, false );
 
+//function for handling the browser window resize
 function onWindowResize(){
-
+    // Update camera aspect ratio and projection matrix on window resize
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
+    // Update renderer size
     renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
+// Call initialization function for UI
 initUI();
+// Call animation function
 animate();
