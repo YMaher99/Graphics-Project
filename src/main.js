@@ -18,12 +18,12 @@ let coinMesh;
 let playerModel;
 let enemyModel;
 let mushroomModel;
-let poweredUp = false;
+let poweredUp = false;//bool for power-up
 let sphere;
-let destination = 0;
-let score = 0;
+let destination = 0;//init destination
+let score = 0;//init score
 
-let playSFX = false;
+let playSFX = false;//bool for sound effects
 let enemyMixer;
 let playerMixer;
 
@@ -109,25 +109,32 @@ function createPlane() {
   // Create the plane mesh
   plane = new THREE.Mesh(geometry, material);
 }
+
+// This function creates a scene
 function createScene() {
+  // Create a new scene
   scene = new THREE.Scene();
+  // Add fog to the scene
   scene.fog = new THREE.FogExp2(0x11111f, 0.05);
+  // Create a perspective camera with a field of view of 75 degrees,
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
   );
+   // Create a WebGL renderer
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(scene.fog.color);
 
+  // Add the renderer's DOM element to the document body
   document.body.appendChild(renderer.domElement);
-  //scene.add(coinMesh);
 
   camera.rotation.x = Math.PI / 2;
 
   plane.position.set(0, -2, 0);
+  // Add the plane to the scene
   scene.add(plane);
 
   camera.position.set(0, -4, 0);
@@ -135,6 +142,7 @@ function createScene() {
   camera.rotation.x -= Math.PI / 6;
   // Set up the camera
   camera.position.z = 3;
+   // Add the listener to the camera
   camera.add(listener);
 }
 
@@ -160,9 +168,8 @@ function addLight() {
 }
 
 // function to create the player
-function loadSpaceShip() {
+function createPlayer() {
   gltfLoader.load("../assets/player/player.glb", function (gltf) {
-    // Assigns the loaded model to the playerModel variable
     playerModel = gltf.scene;
     const scale = 1.5;
     //scale the player
@@ -324,7 +331,7 @@ function createSkyBox() {
 }
 
 createPlane();
-loadSpaceShip();
+createPlayer();
 createScene();
 createCoin();
 addLight();
