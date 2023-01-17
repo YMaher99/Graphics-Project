@@ -272,9 +272,11 @@ function animate() {
     }
     //else end the game 
     else {
-      bgMusic.stop()
-      runningSound.stop();
-      defeatSound.play();
+      if(playSFX){
+        bgMusic.stop()
+        runningSound.stop();
+        defeatSound.play();
+      }
       
       alert("YOU LOST");
 
